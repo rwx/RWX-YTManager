@@ -21,8 +21,12 @@ Para transcrever o audio, instale ffmpeg e um backend Whisper:
 ```bash
 sudo apt install ffmpeg
 source .venv/bin/activate
-pip install faster-whisper
+pip install faster-whisper av==13.0.0
 ```
+
+> **Nota (Python 3.13):** a versao mais nova do av (19.x) falha com
+> "TypeError: open() got an unexpected keyword argument metadata_errors".
+> Fixe av==13.0.0 para evitar esse bug.
 
 ## Uso
 

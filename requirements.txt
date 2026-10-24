@@ -1,5 +1,6 @@
 yt-dlp>=2024.1.1
 
-# Opcional (descomente para transcricao via IA do audio):
-# faster-whisper>=1.0.0
-# openai-whisper>=20231117
+# Opcional: transcricao por IA (necessario para --whisper)
+faster-whisper>=1.0.0
+# av 13.x: evita bug de metadata_errors com Python 3.13
+av==13.0.0

@@ -31,6 +31,24 @@ def download_audio(url, out_dir=None, ytdlp_path="yt-dlp", timeout=None):
     raise RuntimeError("Audio nao encontrado apos o download.")
 
 
+def to_wav(audio_path, sample_rate=16000):
+    """Converte qualquer audio em WAV PCM 16-bit mono via ffmpeg.
+
+    Contorna o decodificador 'av' do faster-whisper (evita bugs de versao).
+    """
+    if audio_path.lower().endswith(".wav") and "16" in audio_path:
+        return audio_path
+    wav_path = os.path.splitext(audio_path)[0] + ".16k.wav"
+    cmd = ["ffmpeg", "-y", "-i", audio_path, "-ac", "1",
+           "-ar", str(sample_rate), "-c:a", "pcm_s16le", wav_path]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, check=False)
+    if result.returncode != 0 or not os.path.exists(wav_path):
+        err = result.stderr.decode("utf-8", "replace").strip()
+        raise RuntimeError("ffmpeg falhou ao converter audio: %s" % err[-1000:])
+    return wav_path
+
+
 def transcribe_audio(audio_path, model_size="medium", language="pt"):
     """Transcreve audio com faster-whisper ou openai-whisper.
 
@@ -58,7 +76,8 @@ def transcribe_audio(audio_path, model_size="medium", language="pt"):
 def _transcribe_faster(audio_path, model_size, language):
     from faster_whisper import WhisperModel  # noqa: F401
     model = WhisperModel(model_size, device="auto", compute_type="auto")
-    segments, _info = model.transcribe(audio_path, language=language)
+    wav = to_wav(audio_path)
+    segments, _info = model.transcribe(wav, language=language)
     return " ".join(seg.text.strip() for seg in segments).strip()
 
 
