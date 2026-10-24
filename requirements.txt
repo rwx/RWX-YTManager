@@ -1,0 +1,5 @@
+yt-dlp>=2024.1.1
+
+# Opcional (descomente para transcricao via IA do audio):
+# faster-whisper>=1.0.0
+# openai-whisper>=20231117

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rwx-ytmanager"
+version = "0.1.0"
+description = "Extracao de metadados, legendas e transcricoes do YouTube via CLI"
+requires-python = ">=3.8"
+dependencies = ["yt-dlp>=2024.1.1"]
+
+[project.scripts]
+ytmanager = "ytmanager.cli:main"
+
+[tool.setuptools]
+packages = ["ytmanager"]

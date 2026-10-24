@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Atalho para rodar o RWX YTManager a partir do venv local.
+HERE="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+VENV="$HERE/.venv"
+if [ -x "$VENV/bin/python" ]; then
+  export PATH="$VENV/bin:$PATH"
+  export PYTHONPATH="$HERE${PYTHONPATH:+:$PYTHONPATH}"
+  export YTDLP_PATH="${YTDLP_PATH:-$VENV/bin/yt-dlp}"
+  exec "$VENV/bin/python" -m ytmanager "$@"
+else
+  export PYTHONPATH="$HERE${PYTHONPATH:+:$PYTHONPATH}"
+  exec python3 -m ytmanager "$@"
+fi
