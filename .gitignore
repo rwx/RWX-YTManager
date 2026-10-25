@@ -8,3 +8,9 @@ dist/
 out/*.txt
 out/*.json
 out/*.md
+
+# Testes
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml

@@ -19,6 +19,7 @@ Desenvolvido por **RWX Solucoes Inteligentes**.
 - [Estrategia de extracao](#estrategia-de-extracao)
 - [Limitacoes e cuidados](#limitacoes-e-cuidados)
 - [Dicionario de arquivos](#dicionario-de-arquivos)
+- [Testes](#testes)
 - [Changelog](#changelog)
 - [Desenvolvedor](#desenvolvedor)
 
@@ -178,6 +179,29 @@ desabilitado automaticamente, mantendo apenas a saida para stderr.
 
 ---
 
+## Testes
+
+O projeto inclui testes unitarios e de integracao (pytest), cobrindo ~94% do
+codigo. Os testes sao rapidos (segundos) e isolados: nao acessam a rede nem o
+yt-dlp real (usam mock).
+
+Instalar as dependencias de desenvolvimento:
+
+    source .venv/bin/activate
+    pip install -e .[dev]
+
+Executar a suite com cobertura:
+
+    pytest
+
+Rodar um modulo especifico:
+
+    pytest tests/test_metadata.py -v
+
+O pyproject.toml exige cobertura minima de 70% (--cov-fail-under=70).
+
+---
+
 ## Estrategia de extracao
 
 1. Legenda manual (enviada pelo autor): melhor qualidade.
@@ -218,6 +242,15 @@ desabilitado automaticamente, mantendo apenas a saida para stderr.
 | requirements.txt | Dependencias do projeto. |
 | install.sh | Cria o venv e instala as dependencias. |
 | pyproject.toml | Metadados do pacote e entry point ytmanager. |
+| tests/ | Suite de testes automatizados (pytest), cobertura ~94%. |
+| tests/test_cli.py | Testes de integracao do CLI (comando, args, exit codes). |
+| tests/test_metadata.py | Testes de metadados (funcoes puras + mock de rede). |
+| tests/test_output.py | Testes de escrita txt/json/md e slugify. |
+| tests/test_subtitles.py | Testes de parsing VTT e listagem de legendas. |
+| tests/test_playlist.py | Testes de listagem de playlist/canal. |
+| tests/test_transcribe.py | Testes de download de audio e backends Whisper. |
+| tests/test_logging_config.py | Testes do logging estruturado (RNF.11). |
+| tests/test_main.py | Teste do entry point python -m ytmanager. |
 | CHANGELOG.md | Historico cronologico de alteracoes. |
 | README.md | Este documento. |
 

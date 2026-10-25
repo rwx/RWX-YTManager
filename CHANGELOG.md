@@ -17,6 +17,8 @@ O formato segue Keep a Changelog e Versionamento Semantico.
 - Atalho bin/ytmanager com resolucao automatica de venv e PYTHONPATH.
 - Logging estruturado em JSON com niveis (INFO/WARN/ERROR/FATAL),
   correlation_id por execucao e arquivo rotativo (RNF.11).
+- Suite de testes automatizados (pytest + pytest-cov): 96 testes,
+  cobertura de 94%, exigencia minima de 70% (RNF.13/RNF.14).
 
 ### Corrigido
 

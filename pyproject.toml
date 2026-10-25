@@ -14,3 +14,15 @@ ytmanager = "ytmanager.cli:main"
 
 [tool.setuptools]
 packages = ["ytmanager"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=ytmanager --cov-report=term-missing --cov-fail-under=70"
+
+[tool.coverage.run]
+branch = true
+source = ["ytmanager"]
+
