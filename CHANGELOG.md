@@ -15,6 +15,8 @@ O formato segue Keep a Changelog e Versionamento Semantico.
 - Transcricao por IA via faster-whisper (--whisper, --whisper-fallback).
 - Saidas em txt, json e markdown (--format, --out).
 - Atalho bin/ytmanager com resolucao automatica de venv e PYTHONPATH.
+- Logging estruturado em JSON com niveis (INFO/WARN/ERROR/FATAL),
+  correlation_id por execucao e arquivo rotativo (RNF.11).
 
 ### Corrigido
 

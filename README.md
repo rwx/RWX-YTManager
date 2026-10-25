@@ -155,6 +155,27 @@ Os arquivos sao nomeados a partir do titulo do video (slug automatico). O
 slugify fica em ytmanager/output.py e pode ser ajustado (ex: comprimento
 maximo, remocao de acentos).
 
+### 6. Logging (monitoramento)
+
+O ytmanager emite logs estruturados em JSON (RNF.11). Cada execucao recebe um
+correlation_id unico, presente em todas as linhas. Os logs vao para stderr e,
+fora de ambientes serverless, tambem para arquivo rotativo.
+
+Niveis: INFO, WARN, ERROR, FATAL (mapeados internamente). Variaveis de ambiente:
+
+    export YTMANAGER_LOG_LEVEL=DEBUG          # DEBUG, INFO, WARNING, ERROR
+    export YTMANAGER_LOG_FILE=/var/log/ytm.log # caminho do arquivo de log
+
+Exemplo de linha de log:
+
+    {"timestamp": "2026-10-24T21:51:22", "severity": "INFO",
+     "service": "rwx-ytmanager", "correlation_id": "a50cf280-...",
+     "message": "execucao iniciada", "command": "info"}
+
+Por padrao, o arquivo de log fica em ~/.cache/rwx-ytmanager/ytmanager.log.
+Em ambientes serverless (Cloud Run, Lambda, App Engine) o arquivo e
+desabilitado automaticamente, mantendo apenas a saida para stderr.
+
 ---
 
 ## Estrategia de extracao
@@ -193,6 +214,7 @@ maximo, remocao de acentos).
 | ytmanager/transcribe.py | Download de audio e transcricao via Whisper (opcional). |
 | ytmanager/playlist.py | Listagem de videos de playlists e canais. |
 | ytmanager/output.py | Escrita de resultados em txt, json e markdown; slugify. |
+| ytmanager/logging_config.py | Logging estruturado (JSON), niveis e correlation_id (RNF.11). |
 | requirements.txt | Dependencias do projeto. |
 | install.sh | Cria o venv e instala as dependencias. |
 | pyproject.toml | Metadados do pacote e entry point ytmanager. |

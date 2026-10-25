@@ -18,6 +18,9 @@ from . import output as out
 from . import playlist as pl
 from . import subtitles as subs
 from . import transcribe as tr
+from .logging_config import get_logger, setup_logging
+
+log = get_logger("rwx-ytmanager.cli")
 
 
 def _print(obj):
@@ -25,6 +28,8 @@ def _print(obj):
 
 
 def cmd_info(args):
+    log.info("iniciando comando info", extra={"extra_command": "info",
+             "extra_url": args.url, "extra_full": args.full})
     if args.full:
         data = md.fetch_full_metadata(args.url, ytdlp_path=args.ytdlp)
     else:
@@ -37,16 +42,24 @@ def cmd_info(args):
                 print("%-16s %s" % (k + ":", json.dumps(v, ensure_ascii=False)))
             else:
                 print("%-16s %s" % (k + ":", v))
+    log.info("comando info concluido", extra={"extra_video_id": data.get("id")})
     return 0
 
 
 def cmd_subs(args):
+    log.info("iniciando comando subs", extra={"extra_command": "subs",
+             "extra_url": args.url})
     langs = subs.list_subtitles(args.url, ytdlp_path=args.ytdlp)
     _print(langs)
+    log.info("comando subs concluido",
+             extra={"extra_manual": len(langs["manual"]),
+                    "extra_automatic": len(langs["automatic"])})
     return 0
 
 
 def cmd_playlist(args):
+    log.info("iniciando comando playlist", extra={"extra_command": "playlist",
+             "extra_url": args.url, "extra_limit": args.limit})
     entries = pl.list_entries(args.url, ytdlp_path=args.ytdlp,
                               limit=args.limit)
     if args.json:
@@ -61,15 +74,20 @@ def cmd_playlist(args):
         os.makedirs(args.out, exist_ok=True)
         out.write_json(entries, os.path.join(args.out, "playlist.json"))
         print("Salvo em %s/playlist.json" % args.out)
+    log.info("comando playlist concluido",
+             extra={"extra_count": len(entries)})
     return 0
 
 
 def cmd_transcript(args):
+    log.info("iniciando comando transcript",
+             extra={"extra_command": "transcript", "extra_url": args.url,
+                    "extra_lang": args.lang, "extra_whisper": args.whisper})
     meta = None
     try:
         meta = md.fetch_full_metadata(args.url, ytdlp_path=args.ytdlp)
     except Exception as exc:  # metadados sao opcionais para transcricao
-        print("[aviso] sem metadados completos: %s" % exc, file=sys.stderr)
+        log.warning("sem metadados completos", extra={"extra_error": str(exc)})
 
     text = None
     source = None
@@ -80,14 +98,18 @@ def cmd_transcript(args):
                 ytdlp_path=args.ytdlp)
             text = subs.vtt_to_text(got["path"], dedup=True)
             source = "legenda automatica" if got["auto"] else "legenda manual"
+            log.info("legenda obtida", extra={"extra_source": source,
+                     "extra_auto": got["auto"]})
         except Exception as exc:
             if not args.whisper_fallback:
                 raise
-            print("[aviso] legenda indisponivel (%s); usando Whisper..." % exc,
-                  file=sys.stderr)
+            log.warning("legenda indisponivel; usando Whisper",
+                        extra={"extra_error": str(exc)})
 
     if text is None:
         audio = tr.download_audio(args.url, ytdlp_path=args.ytdlp)
+        log.info("audio baixado; transcrevendo via Whisper",
+                 extra={"extra_model": args.whisper_model})
         text = tr.transcribe_audio(audio, model_size=args.whisper_model,
                                    language=args.lang)
         source = "whisper (%s)" % args.whisper_model
@@ -112,6 +134,9 @@ def cmd_transcript(args):
     print("Fonte: %s | %d palavras%s" % (source, len(text.split()), meta_info))
     for w in written:
         print("Salvo: %s" % w)
+    log.info("comando transcript concluido",
+             extra={"extra_source": source, "extra_words": len(text.split()),
+                    "extra_files": len(written)})
     return 0
 
 
@@ -122,6 +147,8 @@ def build_parser():
     p.add_argument("--version", action="version", version="%(prog)s " + __version__)
     p.add_argument("--ytdlp", default=os.environ.get("YTDLP_PATH", "yt-dlp"),
                    help="caminho do executavel yt-dlp (default: yt-dlp)")
+    p.add_argument("--log-level", default=None,
+                   help="nivel de log: DEBUG/INFO/WARNING/ERROR (default: INFO)")
     sub = p.add_subparsers(dest="command", required=True)
 
     pi = sub.add_parser("info", help="metadados do video")
@@ -164,13 +191,28 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if getattr(args, "format", None):
         args.format = [f.strip() for f in args.format.split(",") if f.strip()]
+
+    _root, correlation_id = setup_logging(level=args.log_level)
+    log.info("execucao iniciada",
+             extra={"extra_version": __version__, "extra_command": args.command})
+
     try:
-        return args.func(args)
+        code = args.func(args)
+        log.info("execucao finalizada", extra={"extra_exit_code": code})
+        return code
     except RuntimeError as exc:
+        log.error("erro de execucao", extra={"extra_error": str(exc)})
         print("Erro: %s" % exc, file=sys.stderr)
         return 1
     except KeyboardInterrupt:
+        log.warning("execucao interrompida pelo usuario")
         return 130
+    except Exception as exc:  # noqa: BLE001
+        log.critical("erro nao tratado", exc_info=True,
+                     extra={"extra_error": str(exc)})
+        print("Erro inesperado: %s (correlation_id=%s)" % (exc, correlation_id),
+              file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":
