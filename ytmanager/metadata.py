@@ -10,6 +10,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from .errors import (HINT_NETWORK, HINT_URL, HINT_YTDLP, YtManagerError,
+                     friendly_http_message)
+
 OEMBED_URL = "https://www.youtube.com/oembed"
 
 
@@ -24,9 +27,17 @@ def fetch_oembed(url, timeout=15):
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        raise RuntimeError("oEmbed falhou (HTTP %s). URL valida?" % exc.code) from exc
+        raise YtManagerError(
+            friendly_http_message(exc.code),
+            hint=HINT_URL,
+            detail="oEmbed HTTP %s para %s" % (exc.code, url),
+        ) from exc
     except urllib.error.URLError as exc:
-        raise RuntimeError("Falha de rede no oEmbed: %s" % exc.reason) from exc
+        raise YtManagerError(
+            "Nao foi possivel conectar ao YouTube.",
+            hint=HINT_NETWORK,
+            detail="oEmbed URLError: %s" % exc.reason,
+        ) from exc
 
     return {
         "id": extract_video_id(url),
@@ -50,17 +61,27 @@ def fetch_full_metadata(url, ytdlp_path="yt-dlp", timeout=None):
             timeout=timeout, check=False,
         )
     except FileNotFoundError as exc:
-        raise RuntimeError(
-            "yt-dlp nao encontrado em '%s'. Rode install.sh." % ytdlp_path
+        raise YtManagerError(
+            "O yt-dlp nao foi encontrado.",
+            hint=HINT_YTDLP,
+            detail="executavel '%s' inexistente" % ytdlp_path,
         ) from exc
 
     if result.returncode != 0:
         err = result.stderr.decode("utf-8", "replace").strip()
-        raise RuntimeError("yt-dlp falhou ao obter metadados:\n%s" % err[-1500:])
+        raise YtManagerError(
+            "Nao foi possivel obter os metadados do video.",
+            hint=HINT_URL,
+            detail="yt-dlp falhou:\n%s" % err[-1500:],
+        )
 
     lines = result.stdout.decode("utf-8", "replace").splitlines()
     if not lines:
-        raise RuntimeError("yt-dlp nao retornou metadados.")
+        raise YtManagerError(
+            "O video nao retornou metadados.",
+            hint=HINT_URL,
+            detail="yt-dlp nao produziu saida para %s" % url,
+        )
 
     raw = json.loads(lines[0])
     return {

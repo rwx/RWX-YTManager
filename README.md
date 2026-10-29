@@ -20,6 +20,7 @@ Desenvolvido por **RWX Solucoes Inteligentes**.
 - [Limitacoes e cuidados](#limitacoes-e-cuidados)
 - [Dicionario de arquivos](#dicionario-de-arquivos)
 - [Testes](#testes)
+- [Tratamento de erros](#tratamento-de-erros)
 - [Changelog](#changelog)
 - [Desenvolvedor](#desenvolvedor)
 
@@ -109,6 +110,22 @@ Opcoes de transcript:
 
     ./bin/ytmanager playlist URL --limit 50
     ./bin/ytmanager playlist URL --json --out ./saida
+
+### video - baixa o video em mp4/mkv/webm
+
+Baixa o video (com audio) e converte/junta para o formato pedido. Requer
+ffmpeg instalado (usado pelo yt-dlp para juntar video e audio).
+
+    ./bin/ytmanager video URL                          # mp4, melhor qualidade
+    ./bin/ytmanager video URL --format mkv             # container mkv
+    ./bin/ytmanager video URL --format webm --quality 720
+    ./bin/ytmanager video URL --quality 1080 --out ./videos
+
+| Opcao | Padrao | Descricao |
+|---|---|---|
+| --format | mp4 | Container de saida: mp4, mkv ou webm |
+| --quality | best | Altura maxima (ex.: 1080, 720). Use best para o melhor |
+| --out | temporario | Diretorio de saida |
 
 ---
 
@@ -202,6 +219,28 @@ O pyproject.toml exige cobertura minima de 70% (--cov-fail-under=70).
 
 ---
 
+## Tratamento de erros
+
+As falhas sao reportadas com uma mensagem amigavel (sem jargao tecnico) e uma
+dica de acao corretiva. O detalhe tecnico completo vai para o log, nao para a
+tela. Apos um erro o programa retorna um codigo de saida estavel (sem quebrar).
+
+Exemplo:
+
+    Erro: O video nao foi encontrado (pode ter sido removido ou ser privado).
+    Dica: Verifique se a URL e de um video acessivel publicamente.
+
+Codigos de saida:
+
+| Codigo | Significado |
+|---|---|
+| 0 | Sucesso |
+| 1 | Erro esperado (URL invalida, sem legenda, falha do yt-dlp, etc.) |
+| 2 | Erro inesperado (inclui correlation_id para investigacao) |
+| 130 | Interrompido pelo usuario (Ctrl+C) |
+
+---
+
 ## Estrategia de extracao
 
 1. Legenda manual (enviada pelo autor): melhor qualidade.
@@ -239,6 +278,8 @@ O pyproject.toml exige cobertura minima de 70% (--cov-fail-under=70).
 | ytmanager/playlist.py | Listagem de videos de playlists e canais. |
 | ytmanager/output.py | Escrita de resultados em txt, json e markdown; slugify. |
 | ytmanager/logging_config.py | Logging estruturado (JSON), niveis e correlation_id (RNF.11). |
+| ytmanager/errors.py | Excecao YtManagerError (mensagem amigavel + dica + detalhe) (RNF.10). |
+| ytmanager/download.py | Download de video (mp4/mkv/webm) e conversao via ffmpeg. |
 | requirements.txt | Dependencias do projeto. |
 | install.sh | Cria o venv e instala as dependencias. |
 | pyproject.toml | Metadados do pacote e entry point ytmanager. |
@@ -251,6 +292,8 @@ O pyproject.toml exige cobertura minima de 70% (--cov-fail-under=70).
 | tests/test_transcribe.py | Testes de download de audio e backends Whisper. |
 | tests/test_logging_config.py | Testes do logging estruturado (RNF.11). |
 | tests/test_main.py | Teste do entry point python -m ytmanager. |
+| tests/test_errors.py | Testes de erros amigaveis e comando video (RNF.10). |
+| tests/test_download.py | Testes de download/conversao de video. |
 | CHANGELOG.md | Historico cronologico de alteracoes. |
 | README.md | Este documento. |
 

@@ -19,6 +19,12 @@ O formato segue Keep a Changelog e Versionamento Semantico.
   correlation_id por execucao e arquivo rotativo (RNF.11).
 - Suite de testes automatizados (pytest + pytest-cov): 96 testes,
   cobertura de 94%, exigencia minima de 70% (RNF.13/RNF.14).
+- Comando video: baixa o video em mp4/mkv/webm com selecao de qualidade
+  e conversao/remux via ffmpeg (ytmanager/download.py).
+- Tratamento de erros amigavel (RNF.10): YtManagerError com mensagem sem
+  jargao, dica de acao corretiva e detalhe tecnico apenas no log; codigos
+  de saida estaveis (0/1/2/130).
+- 34 novos testes (errors, download): suite total com 130 testes, ~93% cobertura.
 
 ### Corrigido
 

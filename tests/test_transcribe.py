@@ -28,12 +28,12 @@ class TestDownloadAudio:
     def test_failure(self, tmp_path):
         with mock.patch("subprocess.run",
                         return_value=_cp(returncode=1, stderr=b"erro")):
-            with pytest.raises(RuntimeError, match="Falha ao baixar"):
+            with pytest.raises(RuntimeError, match="baixar o audio"):
                 tr.download_audio("https://youtu.be/x", out_dir=str(tmp_path))
 
     def test_no_audio_file(self, tmp_path):
         with mock.patch("subprocess.run", return_value=_cp()):
-            with pytest.raises(RuntimeError, match="nao encontrado"):
+            with pytest.raises(RuntimeError, match="nao foi encontrado no disco"):
                 tr.download_audio("https://youtu.be/x", out_dir=str(tmp_path))
 
 
@@ -43,7 +43,7 @@ class TestToWav:
         open(src, "w").close()
         with mock.patch("subprocess.run",
                         return_value=_cp(returncode=1, stderr=b"erro ffmpeg")):
-            with pytest.raises(RuntimeError, match="ffmpeg falhou"):
+            with pytest.raises(RuntimeError, match="converter o audio"):
                 tr.to_wav(src)
 
     def test_success(self, tmp_path):
@@ -63,7 +63,7 @@ class TestToWav:
 class TestTranscribeAudio:
     def test_no_ffmpeg(self):
         with mock.patch("shutil.which", return_value=None):
-            with pytest.raises(RuntimeError, match="ffmpeg nao encontrado"):
+            with pytest.raises(RuntimeError, match="ffmpeg nao esta instalado"):
                 tr.transcribe_audio("audio.m4a")
 
     def test_faster_backend(self):
@@ -86,5 +86,5 @@ class TestTranscribeAudio:
                         side_effect=ImportError), \
              mock.patch("ytmanager.transcribe._transcribe_openai",
                         side_effect=ImportError):
-            with pytest.raises(RuntimeError, match="Whisper nao instalado"):
+            with pytest.raises(RuntimeError, match="Whisper"):
                 tr.transcribe_audio("audio.m4a")

@@ -50,7 +50,7 @@ class TestListEntries:
     def test_nonzero_returncode(self):
         with mock.patch("subprocess.run",
                         return_value=_cp(returncode=1, stderr=b"falhou")):
-            with pytest.raises(RuntimeError, match="Falha ao listar"):
+            with pytest.raises(RuntimeError, match="listar a playlist"):
                 pl.list_entries("u")
 
     def test_empty(self):

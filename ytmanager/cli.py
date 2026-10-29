@@ -13,11 +13,13 @@ import os
 import sys
 
 from . import __version__
+from . import download as dl
 from . import metadata as md
 from . import output as out
 from . import playlist as pl
 from . import subtitles as subs
 from . import transcribe as tr
+from .errors import YtManagerError
 from .logging_config import get_logger, setup_logging
 
 log = get_logger("rwx-ytmanager.cli")
@@ -140,6 +142,20 @@ def cmd_transcript(args):
     return 0
 
 
+def cmd_video(args):
+    log.info("iniciando comando video",
+             extra={"extra_command": "video", "extra_url": args.url,
+                    "extra_format": args.format, "extra_quality": args.quality})
+    path = dl.download_video(
+        args.url, out_dir=args.out, fmt=args.format, quality=args.quality,
+        ytdlp_path=args.ytdlp)
+    size = os.path.getsize(path) if os.path.exists(path) else 0
+    print("Video salvo: %s (%.1f MB)" % (path, size / (1024 * 1024)))
+    log.info("comando video concluido",
+             extra={"extra_path": path, "extra_bytes": size})
+    return 0
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         prog="ytmanager",
@@ -183,13 +199,24 @@ def build_parser():
                     help="formatos de saida: txt,json,md (default: txt,md)")
     pt.add_argument("--out", default=".", help="diretorio de saida")
     pt.set_defaults(func=cmd_transcript)
+
+    pv = sub.add_parser("video", help="baixa o video em mp4/mkv/webm")
+    pv.add_argument("url")
+    pv.add_argument("--format", default="mp4",
+                    choices=list(dl.SUPPORTED_FORMATS),
+                    help="formato de saida: mp4/mkv/webm (default: mp4)")
+    pv.add_argument("--quality", default="best",
+                    help="altura maxima, ex: 1080, 720, best (default: best)")
+    pv.add_argument("--out", default=None, help="diretorio de saida")
+    pv.set_defaults(func=cmd_video)
     return p
 
 
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
-    if getattr(args, "format", None):
+    # o formato do transcript e csv ("txt,md"); o do video e um unico valor
+    if args.command == "transcript" and getattr(args, "format", None):
         args.format = [f.strip() for f in args.format.split(",") if f.strip()]
 
     _root, correlation_id = setup_logging(level=args.log_level)
@@ -200,7 +227,14 @@ def main(argv=None):
         code = args.func(args)
         log.info("execucao finalizada", extra={"extra_exit_code": code})
         return code
-    except RuntimeError as exc:
+    except YtManagerError as exc:
+        log.error("erro de execucao",
+                  extra={"extra_error": exc.message,
+                         "extra_hint": exc.hint,
+                         "extra_detail": exc.detail})
+        print(exc.user_message(), file=sys.stderr)
+        return 1
+    except RuntimeError as exc:  # compatibilidade com erros legados
         log.error("erro de execucao", extra={"extra_error": str(exc)})
         print("Erro: %s" % exc, file=sys.stderr)
         return 1

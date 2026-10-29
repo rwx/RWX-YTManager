@@ -96,14 +96,14 @@ class TestFetchOembed:
         import urllib.error
         err = urllib.error.HTTPError("url", 400, "Bad", {}, None)
         with mock.patch("urllib.request.urlopen", side_effect=err):
-            with pytest.raises(RuntimeError, match="HTTP 400"):
+            with pytest.raises(RuntimeError, match="nao parece ser valida"):
                 md.fetch_oembed("https://youtu.be/x")
 
     def test_network_error(self):
         import urllib.error
         err = urllib.error.URLError("sem rede")
         with mock.patch("urllib.request.urlopen", side_effect=err):
-            with pytest.raises(RuntimeError, match="Falha de rede"):
+            with pytest.raises(RuntimeError, match="conectar ao YouTube"):
                 md.fetch_oembed("https://youtu.be/x")
 
 
@@ -130,13 +130,13 @@ class TestFetchFullMetadata:
 
     def test_yt_dlp_not_found(self):
         with mock.patch("subprocess.run", side_effect=FileNotFoundError):
-            with pytest.raises(RuntimeError, match="nao encontrado"):
+            with pytest.raises(RuntimeError, match="yt-dlp nao foi encontrado"):
                 md.fetch_full_metadata("https://youtu.be/x")
 
     def test_nonzero_returncode(self):
         cp = self._completed(returncode=1, stderr=b"erro do yt-dlp")
         with mock.patch("subprocess.run", return_value=cp):
-            with pytest.raises(RuntimeError, match="yt-dlp falhou"):
+            with pytest.raises(RuntimeError, match="obter os metadados"):
                 md.fetch_full_metadata("https://youtu.be/x")
 
     def test_empty_output(self):

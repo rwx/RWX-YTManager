@@ -6,6 +6,8 @@ import re
 import subprocess
 import tempfile
 
+from .errors import HINT_SUBS, HINT_YTDLP, YtManagerError
+
 
 def list_subtitles(url, ytdlp_path="yt-dlp", timeout=None):
     """Lista idiomas de legenda manual e automatica disponiveis."""
@@ -16,7 +18,11 @@ def list_subtitles(url, ytdlp_path="yt-dlp", timeout=None):
             timeout=timeout, check=False,
         )
     except FileNotFoundError as exc:
-        raise RuntimeError("yt-dlp nao encontrado: %s" % ytdlp_path) from exc
+        raise YtManagerError(
+            "O yt-dlp nao foi encontrado.",
+            hint=HINT_YTDLP,
+            detail="executavel '%s' inexistente" % ytdlp_path,
+        ) from exc
 
     out = result.stdout.decode("utf-8", "replace")
     manual, auto = set(), set()
@@ -58,8 +64,15 @@ def download_subtitles(url, lang="pt", auto_fallback=True, out_dir=None,
 
     # 1) tenta legenda manual (escrita) no idioma pedido
     manual = base + ["--write-subs", "--sub-langs", lang, "--sub-format", "vtt", url]
-    subprocess.run(manual, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                   timeout=timeout, check=False)
+    try:
+        subprocess.run(manual, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       timeout=timeout, check=False)
+    except FileNotFoundError as exc:
+        raise YtManagerError(
+            "O yt-dlp nao foi encontrado.",
+            hint=HINT_YTDLP,
+            detail="executavel '%s' inexistente" % ytdlp_path,
+        ) from exc
     found = glob.glob(os.path.join(workdir, "subs*.vtt"))
     found = [f for f in found if _lang_in_name(f, lang)]
     if found:
@@ -76,9 +89,10 @@ def download_subtitles(url, lang="pt", auto_fallback=True, out_dir=None,
         if found:
             return {"path": found[0], "lang": lang, "auto": True}
 
-    raise RuntimeError(
-        "Nenhuma legenda encontrada para '%s'. Tente --lang en ou use --whisper."
-        % lang
+    raise YtManagerError(
+        "Nenhuma legenda foi encontrada para o idioma '%s'." % lang,
+        hint=HINT_SUBS,
+        detail="sem legenda manual/automatica em %s" % lang,
     )
 
 

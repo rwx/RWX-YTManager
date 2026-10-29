@@ -3,6 +3,8 @@
 import json
 import subprocess
 
+from .errors import HINT_URL, HINT_YTDLP, YtManagerError
+
 
 def list_entries(url, ytdlp_path="yt-dlp", limit=None, flat=True, timeout=None):
     """Lista videos de uma playlist/canal. Retorna lista de dicts."""
@@ -13,11 +15,23 @@ def list_entries(url, ytdlp_path="yt-dlp", limit=None, flat=True, timeout=None):
         cmd += ["--playlist-end", str(limit)]
     cmd.append(url)
 
-    result = subprocess.run(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, timeout=timeout, check=False)
+    try:
+        result = subprocess.run(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, timeout=timeout,
+                                check=False)
+    except FileNotFoundError as exc:
+        raise YtManagerError(
+            "O yt-dlp nao foi encontrado.",
+            hint=HINT_YTDLP,
+            detail="executavel '%s' inexistente" % ytdlp_path,
+        ) from exc
     if result.returncode != 0:
         err = result.stderr.decode("utf-8", "replace").strip()
-        raise RuntimeError("Falha ao listar playlist/canal:\n%s" % err[-1200:])
+        raise YtManagerError(
+            "Nao foi possivel listar a playlist ou canal.",
+            hint=HINT_URL,
+            detail="yt-dlp falhou:\n%s" % err[-1200:],
+        )
 
     entries = []
     for line in result.stdout.decode("utf-8", "replace").splitlines():

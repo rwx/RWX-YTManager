@@ -123,7 +123,7 @@ pt       Portuguese   vtt
 
     def test_yt_dlp_not_found(self):
         with mock.patch("subprocess.run", side_effect=FileNotFoundError):
-            with pytest.raises(RuntimeError, match="nao encontrado"):
+            with pytest.raises(RuntimeError, match="yt-dlp nao foi encontrado"):
                 subs.list_subtitles("https://youtu.be/x")
 
 
