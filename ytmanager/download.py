@@ -11,6 +11,7 @@ import os
 import subprocess
 
 from .errors import HINT_FFMPEG, HINT_URL, HINT_YTDLP, YtManagerError
+from .validation import ensure_arg_list
 
 # Perfis de formato por container de saida.
 _FORMAT_SELECTOR = {
@@ -62,6 +63,7 @@ def download_video(url, out_dir=None, fmt="mp4", quality=None,
     if extra_args:
         cmd += list(extra_args)
     cmd.append(url)
+    cmd = ensure_arg_list(cmd)
 
     if not _has_ffmpeg():
         raise YtManagerError(

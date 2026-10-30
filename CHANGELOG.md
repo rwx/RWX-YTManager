@@ -25,6 +25,14 @@ O formato segue Keep a Changelog e Versionamento Semantico.
   jargao, dica de acao corretiva e detalhe tecnico apenas no log; codigos
   de saida estaveis (0/1/2/130).
 - 34 novos testes (errors, download): suite total com 130 testes, ~93% cobertura.
+- Validacao de entrada (RNF.08): modulo ytmanager/validation.py valida URL,
+  scheme (http/https) e host (allowlist YouTube com match exato/subdominio),
+  normaliza http->https e limita tamanho; chamada central no cli.main para
+  todos os comandos. Bloqueia dominio lookalike (youtu.be.evil.com).
+- Seguranca (RNF.09): ensure_arg_list() garante subprocess sempre com lista
+  (sem shell=True); safe_output_name() sanitiza nomes de arquivo contra path
+  traversal; protecao contra caracteres de controle na URL.
+- 65 novos testes de validacao/seguranca: suite total com 195 testes, ~94%.
 
 ### Corrigido
 

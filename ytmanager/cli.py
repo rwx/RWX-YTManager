@@ -19,6 +19,7 @@ from . import output as out
 from . import playlist as pl
 from . import subtitles as subs
 from . import transcribe as tr
+from . import validation as val
 from .errors import YtManagerError
 from .logging_config import get_logger, setup_logging
 
@@ -119,7 +120,8 @@ def cmd_transcript(args):
     result = {"metadata": meta, "transcript": text, "source": source}
 
     title = (meta or {}).get("title") or md.extract_video_id(args.url)
-    base = os.path.join(args.out, out.slugify(title))
+    safe = val.safe_output_name(out.slugify(title))
+    base = os.path.join(args.out, safe)
     os.makedirs(args.out, exist_ok=True)
 
     written = []
@@ -224,6 +226,8 @@ def main(argv=None):
              extra={"extra_version": __version__, "extra_command": args.command})
 
     try:
+        # RNF.08: valida e normaliza a URL antes de qualquer comando
+        args.url = val.validate_url(args.url)
         code = args.func(args)
         log.info("execucao finalizada", extra={"extra_exit_code": code})
         return code

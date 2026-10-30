@@ -4,6 +4,7 @@ import json
 import subprocess
 
 from .errors import HINT_URL, HINT_YTDLP, YtManagerError
+from .validation import ensure_arg_list
 
 
 def list_entries(url, ytdlp_path="yt-dlp", limit=None, flat=True, timeout=None):
@@ -14,6 +15,7 @@ def list_entries(url, ytdlp_path="yt-dlp", limit=None, flat=True, timeout=None):
     if limit:
         cmd += ["--playlist-end", str(limit)]
     cmd.append(url)
+    cmd = ensure_arg_list(cmd)
 
     try:
         result = subprocess.run(cmd, stdout=subprocess.PIPE,

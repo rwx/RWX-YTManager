@@ -82,7 +82,7 @@ class TestCmdPlaylist:
         entries = [{"id": "a", "title": "A"}]
         with mock.patch("ytmanager.playlist.list_entries",
                         return_value=entries):
-            code = cli.main(["playlist", "u", "--json", "--out",
+            code = cli.main(["playlist", "https://youtu.be/abc", "--json", "--out",
                              str(tmp_path)])
         assert code == 0
         assert (tmp_path / "playlist.json").exists()

@@ -12,6 +12,7 @@ import urllib.request
 
 from .errors import (HINT_NETWORK, HINT_URL, HINT_YTDLP, YtManagerError,
                      friendly_http_message)
+from .validation import ensure_arg_list
 
 OEMBED_URL = "https://www.youtube.com/oembed"
 
@@ -54,7 +55,8 @@ def fetch_full_metadata(url, ytdlp_path="yt-dlp", timeout=None):
     """Metadados completos via yt-dlp (--dump-json)."""
     import subprocess
 
-    cmd = [ytdlp_path, "--no-warnings", "--skip-download", "--dump-json", url]
+    cmd = ensure_arg_list([ytdlp_path, "--no-warnings", "--skip-download",
+                           "--dump-json", url])
     try:
         result = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -114,7 +116,8 @@ def extract_video_id(url):
     """Extrai o ID do video de varios formatos de URL do YouTube."""
     parsed = urllib.parse.urlparse(url)
     host = (parsed.hostname or "").lower()
-    if "youtu.be" in host:
+    # match exato/subdominio legitimo (evita furo de 'youtu.be.evil.com')
+    if host == "youtu.be" or host.endswith(".youtu.be"):
         return parsed.path.lstrip("/").split("/")[0] or None
     qs = urllib.parse.parse_qs(parsed.query)
     if "v" in qs:

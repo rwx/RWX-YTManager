@@ -120,19 +120,19 @@ class TestCmdVideoCLI:
             return path
 
         with mock.patch("ytmanager.download.download_video", side_effect=fake):
-            code = cli.main(["video", "u", "--out", str(tmp_path),
+            code = cli.main(["video", "https://youtu.be/abc", "--out", str(tmp_path),
                              "--format", "mkv"])
         assert code == 0
         assert captured["fmt"] == "mkv"
 
     def test_invalid_format_argument(self):
         with pytest.raises(SystemExit):
-            cli.main(["video", "u", "--format", "avi"])
+            cli.main(["video", "https://youtu.be/abc", "--format", "avi"])
 
     def test_download_error_returns_1(self, tmp_path, capsys):
         with mock.patch("ytmanager.download.download_video",
                         side_effect=YtManagerError("Nao foi possivel baixar.",
                                                    hint=HINT_URL)):
-            code = cli.main(["video", "u", "--out", str(tmp_path)])
+            code = cli.main(["video", "https://youtu.be/abc", "--out", str(tmp_path)])
         assert code == 1
         assert "Nao foi possivel baixar." in capsys.readouterr().err

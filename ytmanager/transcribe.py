@@ -12,6 +12,7 @@ import tempfile
 
 from .errors import (HINT_FFMPEG, HINT_URL, HINT_WHISPER, HINT_YTDLP,
                      YtManagerError)
+from .validation import ensure_arg_list
 
 
 def download_audio(url, out_dir=None, ytdlp_path="yt-dlp", timeout=None):
@@ -19,8 +20,8 @@ def download_audio(url, out_dir=None, ytdlp_path="yt-dlp", timeout=None):
     workdir = out_dir or tempfile.mkdtemp(prefix="ytmgr_audio_")
     os.makedirs(workdir, exist_ok=True)
     outtmpl = os.path.join(workdir, "audio.%(ext)s")
-    cmd = [ytdlp_path, "--no-warnings", "-x", "-f", "bestaudio",
-           "-o", outtmpl, url]
+    cmd = ensure_arg_list([ytdlp_path, "--no-warnings", "-x", "-f",
+                           "bestaudio", "-o", outtmpl, url])
     try:
         result = subprocess.run(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, timeout=timeout,

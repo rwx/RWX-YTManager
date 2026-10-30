@@ -7,11 +7,13 @@ import subprocess
 import tempfile
 
 from .errors import HINT_SUBS, HINT_YTDLP, YtManagerError
+from .validation import ensure_arg_list
 
 
 def list_subtitles(url, ytdlp_path="yt-dlp", timeout=None):
     """Lista idiomas de legenda manual e automatica disponiveis."""
-    cmd = [ytdlp_path, "--no-warnings", "--skip-download", "--list-subs", url]
+    cmd = ensure_arg_list([ytdlp_path, "--no-warnings", "--skip-download",
+                           "--list-subs", url])
     try:
         result = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

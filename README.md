@@ -20,6 +20,7 @@ Desenvolvido por **RWX Solucoes Inteligentes**.
 - [Limitacoes e cuidados](#limitacoes-e-cuidados)
 - [Dicionario de arquivos](#dicionario-de-arquivos)
 - [Testes](#testes)
+- [Validacao de entrada e seguranca](#validacao-de-entrada-e-seguranca)
 - [Tratamento de erros](#tratamento-de-erros)
 - [Changelog](#changelog)
 - [Desenvolvedor](#desenvolvedor)
@@ -219,6 +220,34 @@ O pyproject.toml exige cobertura minima de 70% (--cov-fail-under=70).
 
 ---
 
+## Validacao de entrada e seguranca
+
+### Validacao da URL (RNF.08)
+
+Toda URL e validada antes de qualquer acesso a rede ou ao yt-dlp:
+
+- Precisa ter scheme `http://` ou `https://` (http e normalizado para https).
+- O host precisa estar na allowlist do YouTube: `youtube.com`, `youtu.be`,
+  `youtube-nocookie.com` (e seus subdominios legitimos).
+- URLs com tamanho excessivo (acima de 2048 caracteres) ou caracteres de
+  controle sao rejeitadas.
+- Dominios parecidos sao bloqueados (ex.: `youtu.be.evil.com` NAO e aceito).
+
+Se a URL for invalida, o comando e abortado com mensagem amigavel, sem
+qualquer chamada de rede.
+
+### Controles de seguranca (RNF.09)
+
+- **Sem injecao de comandos**: todas as chamadas ao `subprocess` usam uma
+  lista de argumentos (nunca `shell=True`). As listas passam por
+  `ensure_arg_list()`, que rejeita strings soltas.
+- **Sanitizacao de nome de arquivo**: nomes gerados a partir do titulo do
+  video passam por `safe_output_name()`, que remove separadores de caminho.
+  Isso impede path traversal (`../../etc/passwd`) e variantes.
+- **Limite de tamanho da URL**: defesa contra payloads gigantes.
+
+---
+
 ## Tratamento de erros
 
 As falhas sao reportadas com uma mensagem amigavel (sem jargao tecnico) e uma
@@ -279,6 +308,7 @@ Codigos de saida:
 | ytmanager/output.py | Escrita de resultados em txt, json e markdown; slugify. |
 | ytmanager/logging_config.py | Logging estruturado (JSON), niveis e correlation_id (RNF.11). |
 | ytmanager/errors.py | Excecao YtManagerError (mensagem amigavel + dica + detalhe) (RNF.10). |
+| ytmanager/validation.py | Validacao de URL/host e controles de seguranca (RNF.08/RNF.09). |
 | ytmanager/download.py | Download de video (mp4/mkv/webm) e conversao via ffmpeg. |
 | requirements.txt | Dependencias do projeto. |
 | install.sh | Cria o venv e instala as dependencias. |
@@ -294,6 +324,7 @@ Codigos de saida:
 | tests/test_main.py | Teste do entry point python -m ytmanager. |
 | tests/test_errors.py | Testes de erros amigaveis e comando video (RNF.10). |
 | tests/test_download.py | Testes de download/conversao de video. |
+| tests/test_validation.py | Testes de validacao de entrada e seguranca (RNF.08/RNF.09). |
 | CHANGELOG.md | Historico cronologico de alteracoes. |
 | README.md | Este documento. |
 
